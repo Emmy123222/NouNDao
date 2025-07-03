@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --cosmic-purple: #8B5CF6;
+  --cosmic-blue: #3B82F6;
+  --cosmic-pink: #EC4899;
+  --cosmic-cyan: #06B6D4;
+  --cosmic-green: #10B981;
+  --cosmic-orange: #F59E0B;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 100%);
+  overflow-x: hidden;
+}
+
+.font-cosmic {
+  font-family: 'Orbitron', monospace;
+}
+
+.cosmic-glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.cosmic-glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.cosmic-glow-pink {
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+}
+
+.cosmic-text-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.glitch-effect {
+  position: relative;
+  animation: glitch 2s infinite;
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+  to { box-shadow: 0 0 30px rgba(139, 92, 246, 0.6); }
+}
+
+.cosmic-border {
+  background: linear-gradient(45deg, #8B5CF6, #3B82F6, #EC4899, #06B6D4);
+  background-size: 400% 400%;
+  animation: gradient-shift 4s ease infinite;
+  padding: 2px;
+  border-radius: 12px;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.cosmic-border > * {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.glass-morphism {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neon-text {
+  color: #fff;
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor,
+    0 0 20px currentColor;
+}
