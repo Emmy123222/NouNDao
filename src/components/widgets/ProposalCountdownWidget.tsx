@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { GraphQLClient } from 'graphql-request';
-import { Clock, Vote, TrendingUp } from 'lucide-react';
+import { Clock, Vote, TrendingUp, ExternalLink } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
-import { FALLBACK_ENDPOINTS } from '../../config/constants';
+import { FALLBACK_ENDPOINTS, BLOCK_TIME } from '../../config/constants';
 
 const ACTIVE_PROPOSALS_QUERY = `
   query GetActiveProposals {
@@ -19,6 +19,7 @@ const ACTIVE_PROPOSALS_QUERY = `
       againstVotes
       abstainVotes
       status
+      createdTimestamp
     }
   }
 `;
@@ -31,15 +32,16 @@ interface Proposal {
   againstVotes: string;
   abstainVotes: string;
   status: string;
+  createdTimestamp: string;
 }
 
 export function ProposalCountdownWidget() {
-  const { selectedDao, nounsGraphEndpoint, lilnounsGraphEndpoint } = useAppStore();
+  const { selectedDao, nounsGraphEndpoint, lilnounsGraphEndpoint, playSound } = useAppStore();
   
   const endpoint = selectedDao === 'nouns' ? nounsGraphEndpoint : lilnounsGraphEndpoint;
   const fallbackEndpoint = selectedDao === 'nouns' ? FALLBACK_ENDPOINTS.nouns : FALLBACK_ENDPOINTS.lilnouns;
 
-  const { data: proposals, isLoading } = useQuery({
+  const { data: proposals, isLoading, error } = useQuery({
     queryKey: ['activeProposals', selectedDao],
     queryFn: async () => {
       const tryFetch = async (url: string) => {
@@ -57,21 +59,44 @@ export function ProposalCountdownWidget() {
         return await tryFetch(endpoint);
       } catch (error) {
         console.warn('Primary endpoint failed, trying fallback:', error);
-        try {
-          return await tryFetch(fallbackEndpoint);
-        } catch (fallbackError) {
-          console.error('Both endpoints failed, using mock data:', fallbackError);
-          return generateMockActiveProposals();
-        }
+        return await tryFetch(fallbackEndpoint);
       }
     },
     refetchInterval: 60000, // Refetch every minute
-    retry: 1,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 
   const formatVotes = (votes: string) => {
     return (parseInt(votes) / 1e18).toFixed(1);
   };
+
+  const getTimeUntilBlock = (endBlock: string) => {
+    // This is a simplified calculation - in production you'd want to fetch current block
+    const currentBlock = 18500000; // You'd get this from an RPC call
+    const blocksLeft = parseInt(endBlock) - currentBlock;
+    const secondsLeft = blocksLeft * BLOCK_TIME;
+    
+    if (secondsLeft <= 0) return 'Ended';
+    
+    const days = Math.floor(secondsLeft / 86400);
+    const hours = Math.floor((secondsLeft % 86400) / 3600);
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
+  };
+
+  if (error) {
+    return (
+      <div className="glass-morphism rounded-xl p-6 cosmic-border">
+        <div className="flex items-center space-x-3 mb-4">
+          <Clock className="h-5 w-5 text-red-400" />
+          <h3 className="font-cosmic font-semibold text-white">Active Proposals</h3>
+        </div>
+        <p className="text-red-400 text-sm">Failed to load proposals</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -100,9 +125,20 @@ export function ProposalCountdownWidget() {
         <div className="space-y-4">
           {proposals.map((proposal: Proposal) => (
             <div key={proposal.id} className="bg-black/20 rounded-lg p-3 space-y-2">
-              <h4 className="text-sm font-medium text-white truncate">
-                {proposal.title || `Proposal ${proposal.id}`}
-              </h4>
+              <div className="flex items-start justify-between">
+                <h4 className="text-sm font-medium text-white truncate flex-1 pr-2">
+                  {proposal.title || `Proposal ${proposal.id}`}
+                </h4>
+                <button
+                  onClick={() => {
+                    window.open(`/proposal/${selectedDao}/${proposal.id}`, '_blank');
+                    playSound('click');
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </button>
+              </div>
               
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-1">
@@ -115,13 +151,22 @@ export function ProposalCountdownWidget() {
                 </div>
               </div>
               
-              <div className="text-xs text-gray-400">
-                Ends at block {proposal.endBlock}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Ends in:</span>
+                <span className="text-orange-400 font-medium">
+                  {getTimeUntilBlock(proposal.endBlock)}
+                </span>
               </div>
             </div>
           ))}
           
-          <button className="w-full mt-3 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-blue-300 text-sm font-medium transition-all duration-200">
+          <button 
+            onClick={() => {
+              window.location.href = '/';
+              playSound('click');
+            }}
+            className="w-full mt-3 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-blue-300 text-sm font-medium transition-all duration-200"
+          >
             View All Proposals
           </button>
         </div>
@@ -130,27 +175,4 @@ export function ProposalCountdownWidget() {
       )}
     </div>
   );
-}
-
-function generateMockActiveProposals(): Proposal[] {
-  return [
-    {
-      id: '1',
-      title: 'Fund Community Art Initiative',
-      endBlock: '18500000',
-      forVotes: (45 * 1e18).toString(),
-      againstVotes: (12 * 1e18).toString(),
-      abstainVotes: (3 * 1e18).toString(),
-      status: 'ACTIVE',
-    },
-    {
-      id: '2',
-      title: 'Upgrade DAO Treasury Management',
-      endBlock: '18502000',
-      forVotes: (67 * 1e18).toString(),
-      againstVotes: (8 * 1e18).toString(),
-      abstainVotes: (5 * 1e18).toString(),
-      status: 'ACTIVE',
-    },
-  ];
 }

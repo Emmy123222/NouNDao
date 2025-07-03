@@ -7,7 +7,7 @@ A fully decentralized, censorship-resistant frontend for Nouns DAO and Lil Nouns
 ## 🌌 Features
 
 ### 🔍 Proposal Explorer
-- Browse proposals from Nouns DAO and Lil Nouns DAO
+- Browse proposals from Nouns DAO and Lil Nouns DAO via The Graph Protocol
 - Advanced filtering by status, proposer, and keywords
 - Real-time vote counts and participation metrics
 - Responsive proposal cards with cosmic animations
@@ -20,7 +20,7 @@ A fully decentralized, censorship-resistant frontend for Nouns DAO and Lil Nouns
 
 ### 🧾 Proposal Drafting Studio
 - Create and edit proposal drafts with rich editor
-- Simulate proposal execution using mock Tenderly integration
+- Simulate proposal execution
 - Sign drafts with wallet and publish to IPFS
 - Export/import drafts as JSON
 
@@ -30,17 +30,11 @@ A fully decentralized, censorship-resistant frontend for Nouns DAO and Lil Nouns
 - Track proposals created and supported
 - Favorite delegates system
 
-### 💬 Comment System (SIWE)
-- Sign-in with Ethereum authentication
-- Post signed comments on proposals
-- IPFS-based comment storage
-- Upvote/downvote with local storage
-
 ### 🪄 Live Auction Viewer
-- Real-time Nouns/Lil Nouns auction data
+- Real-time Nouns/Lil Nouns auction data from The Graph
 - Current bid tracking and countdown timers
 - Historical auction results
-- Direct bidding interface
+- Direct links to auction interfaces
 
 ### 🪐 Cosmic UI & Animations
 - Stunning 3D space background with animated Earth
@@ -80,7 +74,6 @@ A fully decentralized, censorship-resistant frontend for Nouns DAO and Lil Nouns
 - **Storage**: IPFS via Pinata/Web3.Storage
 - **Charts**: Recharts for vote visualization
 - **Validation**: Zod for form validation
-- **Authentication**: Sign-In with Ethereum (SIWE)
 
 ## 🚀 Getting Started
 
@@ -101,12 +94,25 @@ cd nouniverse-dao-hub
 npm install
 ```
 
-3. Start the development server:
+3. Copy environment variables:
+```bash
+cp .env.example .env
+```
+
+4. Configure your environment variables in `.env`:
+```bash
+# Optional: Add your API keys for better performance
+VITE_GRAPH_API_KEY=your_graph_api_key
+VITE_PINATA_API_KEY=your_pinata_api_key
+VITE_PINATA_SECRET_KEY=your_pinata_secret_key
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:5173](http://localhost:5173) in your browser
+6. Open [http://localhost:5173](http://localhost:5173) in your browser
 
 ### Building for Production
 
@@ -116,76 +122,47 @@ npm run build
 
 The built files will be in the `dist` directory, ready for IPFS deployment.
 
-## 🌐 IPFS Deployment
+## 🌐 Environment Configuration
 
-### 1. Build the Project
-```bash
-npm run build
-```
+### Required Environment Variables
 
-### 2. Upload to IPFS
+The application works out of the box with public endpoints, but you can configure these variables for better performance:
 
-#### Option A: Using Pinata
-1. Create account at [Pinata](https://pinata.cloud/)
-2. Upload the `dist` folder
-3. Note the returned IPFS hash (CID)
+#### The Graph Protocol
+- `VITE_GRAPH_API_KEY`: Your Graph Protocol API key for higher rate limits
 
-#### Option B: Using Web3.Storage
-1. Create account at [Web3.Storage](https://web3.storage/)
-2. Use their CLI or web interface to upload `dist`
-3. Get the IPFS CID
+#### RPC Endpoints
+- `VITE_ETHEREUM_RPC_URL`: Primary Ethereum RPC endpoint
+- `VITE_ETHEREUM_RPC_URL_BACKUP`: Backup RPC endpoint
 
-#### Option C: Using IPFS Desktop
-1. Install [IPFS Desktop](https://github.com/ipfs-shipyard/ipfs-desktop)
-2. Add the `dist` folder to IPFS
-3. Pin the content and note the CID
+#### IPFS Services
+- `VITE_PINATA_API_KEY`: Pinata API key for IPFS uploads
+- `VITE_PINATA_SECRET_KEY`: Pinata secret key
+- `VITE_WEB3_STORAGE_TOKEN`: Web3.Storage token
 
-### 3. Access Your Site
-- `https://ipfs.io/ipfs/<CID>`
-- `https://<CID>.ipfs.w3s.link`
-- `https://<CID>.ipfs.cf-ipfs.com`
+#### Feature Flags
+- `VITE_ENABLE_SOUND`: Enable/disable sound effects
+- `VITE_ENABLE_ANIMATIONS`: Enable/disable animations
+- `VITE_ENABLE_IPFS_UPLOAD`: Enable/disable IPFS upload features
 
-## 🏷 ENS Configuration
+### Getting API Keys
 
-### 1. Purchase ENS Domain
-Visit [ENS Domains](https://ens.domains/) and purchase your domain (e.g., `nouniverse.eth`)
+#### The Graph Protocol
+1. Visit [The Graph Studio](https://thegraph.com/studio/)
+2. Create an account and generate an API key
+3. Add to `VITE_GRAPH_API_KEY`
 
-### 2. Set Content Hash
-1. Go to your ENS domain manager
-2. Add a "Content" record
-3. Set the value to `ipfs://<your-ipfs-cid>`
+#### Pinata (for IPFS)
+1. Visit [Pinata](https://pinata.cloud/)
+2. Create an account
+3. Generate API keys in the dashboard
+4. Add to `VITE_PINATA_API_KEY` and `VITE_PINATA_SECRET_KEY`
 
-### 3. Access via ENS
-- `https://nouniverse.eth.limo`
-- `https://nouniverse.eth.link`
-
-## ⚙️ Configuration
-
-### RPC Endpoints
-Default: `https://rpc.ankr.com/eth`
-
-Configure custom RPC endpoints in Settings for:
-- Better performance
-- Private node access
-- Alternative providers (Alchemy, Infura, etc.)
-
-### Graph Protocol Endpoints
-Default endpoints:
-- Nouns: `https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph`
-- Lil Nouns: `https://api.thegraph.com/subgraphs/name/lilnounsdao/lil-nouns-subgraph`
-
-Custom endpoints can be configured for:
-- Self-hosted Graph nodes
-- Alternative subgraph deployments
-- Development/testing environments
-
-### Widget Customization
-Users can add/remove widgets:
-- Auction Stats
-- Proposal Countdown
-- Favorite Delegates
-- Voting Power
-- Recent Activity
+#### Web3.Storage (alternative IPFS)
+1. Visit [Web3.Storage](https://web3.storage/)
+2. Create an account
+3. Generate an API token
+4. Add to `VITE_WEB3_STORAGE_TOKEN`
 
 ## 🏗 Architecture
 
@@ -210,80 +187,93 @@ Users can add/remove widgets:
 3. **IPFS** storage for comments and draft proposals
 4. **Local Storage** for user preferences and favorites
 
-## 🧪 Development
+## 🔧 Production Deployment
 
-### Project Structure
-```
-src/
-├── components/          # Reusable UI components
-│   ├── widgets/        # Modular widget components
-│   └── ...
-├── config/             # Configuration files
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-├── store/              # Zustand state management
-├── types/              # TypeScript type definitions
-└── App.tsx             # Main app component
+### IPFS Deployment
+
+1. Build the project:
+```bash
+npm run build
 ```
 
-### Adding New Features
+2. Upload to IPFS using your preferred method:
 
-1. **Components**: Create in `src/components/`
-2. **Pages**: Add in `src/pages/`
-3. **Hooks**: Custom hooks in `src/hooks/`
-4. **Types**: Define in `src/types/`
-5. **State**: Manage in `src/store/`
-6. **Routing**: Update in `src/App.tsx`
+#### Option A: Using Pinata
+```bash
+# Upload the dist folder to Pinata
+# Get the IPFS hash (CID)
+```
 
-### Data Fetching
-All data is fetched from The Graph Protocol using GraphQL:
-- Automatic query state management
-- Error handling and retries
-- Real-time refetching
-- Optimistic updates
+#### Option B: Using Web3.Storage
+```bash
+# Upload the dist folder to Web3.Storage
+# Get the IPFS hash (CID)
+```
 
-## 🎨 Cosmic Theme
+#### Option C: Using IPFS Desktop
+```bash
+# Add the dist folder to IPFS Desktop
+# Pin the content and note the CID
+```
 
-### Color Palette
-- **Purple**: `#8B5CF6` (Primary cosmic color)
-- **Blue**: `#3B82F6` (Secondary cosmic color)
-- **Pink**: `#EC4899` (Accent color)
-- **Cyan**: `#06B6D4` (Highlight color)
-- **Green**: `#10B981` (Success color)
-- **Orange**: `#F59E0B` (Warning color)
+3. Access your site:
+- `https://ipfs.io/ipfs/<CID>`
+- `https://<CID>.ipfs.w3s.link`
+- `https://<CID>.ipfs.cf-ipfs.com`
 
-### Typography
-- **Headers**: Orbitron (cosmic/futuristic font)
-- **Body**: Space Grotesk (modern, readable)
-- **Code**: JetBrains Mono (monospace)
+### ENS Configuration
 
-### Animations
-- Floating elements with CSS keyframes
-- Glitch effects for headers
-- Pulse glows for interactive elements
-- Smooth transitions throughout
+1. Purchase ENS domain at [ENS Domains](https://ens.domains/)
+2. Set content hash to `ipfs://<your-ipfs-cid>`
+3. Access via:
+   - `https://yourdomain.eth.limo`
+   - `https://yourdomain.eth.link`
 
-## 🔧 Customization
+## 🔍 Data Sources
 
-### Sound Effects
-Toggle cosmic sound effects in settings:
-- Click sounds
-- Hover effects
-- Success/error notifications
-- Ambient space sounds (optional)
+### The Graph Protocol Subgraphs
 
-### Widget System
-Add custom widgets by:
-1. Creating widget component in `src/components/widgets/`
-2. Registering in `src/config/constants.ts`
-3. Adding to widget panel
+The application fetches data from these subgraphs:
 
-### Theme Variants
-Extend the cosmic theme:
-- Dark mode (default)
-- Light mode (optional)
-- High contrast mode
-- Custom color schemes
+- **Nouns DAO**: `nounsdao/nouns-subgraph`
+- **Lil Nouns DAO**: `lilnounsdao/lil-nouns-subgraph`
+
+### Fallback Endpoints
+
+Multiple fallback endpoints ensure reliability:
+- Primary: The Graph hosted service
+- Backup: The Graph Studio
+- Tertiary: Public RPC endpoints
+
+### Error Handling
+
+- Automatic failover between endpoints
+- Exponential backoff retry logic
+- User-friendly error messages
+- Graceful degradation
+
+## 🎨 Customization
+
+### Theme Configuration
+
+Edit `src/config/constants.ts` to customize:
+- Color schemes
+- Animation settings
+- Widget configurations
+- Sound effects
+
+### Adding Custom Widgets
+
+1. Create widget component in `src/components/widgets/`
+2. Register in `src/config/constants.ts`
+3. Add to widget panel
+
+### Environment-Specific Builds
+
+Use different `.env` files for different environments:
+- `.env.development`
+- `.env.staging`
+- `.env.production`
 
 ## 🤝 Contributing
 
@@ -311,7 +301,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **Issues**: [GitHub Issues](https://github.com/your-org/nouniverse-dao-hub/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/nouniverse-dao-hub/discussions)
 - **Discord**: [Nouns Discord](https://discord.gg/nouns)
-- **Twitter**: [@nouniverse](https://twitter.com/nouniverse)
 
 ## 🙏 Acknowledgments
 

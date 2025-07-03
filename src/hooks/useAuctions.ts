@@ -5,12 +5,13 @@ import { Auction } from '../types/proposal';
 import { FALLBACK_ENDPOINTS } from '../config/constants';
 
 const AUCTIONS_QUERY = `
-  query GetAuctions($first: Int!, $skip: Int!) {
+  query GetAuctions($first: Int!, $skip: Int!, $where: Auction_filter) {
     auctions(
       first: $first
       skip: $skip
       orderBy: startTime
       orderDirection: desc
+      where: $where
     ) {
       id
       amount
@@ -61,74 +62,42 @@ export function useAuctions({
   return useQuery({
     queryKey: ['auctions', selectedDao, page, first, settled],
     queryFn: async () => {
+      // Build where clause
+      const where: any = {};
+      if (settled !== undefined) {
+        where.settled = settled;
+      }
+
       const tryFetch = async (url: string) => {
-        const client = new GraphQLClient(url);
-        const data = await client.request(AUCTIONS_QUERY, { first, skip });
-        return data.auctions as Auction[];
+        try {
+          const client = new GraphQLClient(url);
+          const data = await client.request(AUCTIONS_QUERY, { 
+            first, 
+            skip, 
+            where: Object.keys(where).length > 0 ? where : undefined 
+          });
+          return data.auctions as Auction[];
+        } catch (error) {
+          console.error('Error fetching auctions from:', url, error);
+          throw error;
+        }
       };
 
       try {
-        const auctions = await tryFetch(endpoint);
-        
-        // Apply settled filter if specified
-        if (settled !== undefined) {
-          return auctions.filter(auction => auction.settled === settled);
-        }
-        
-        return auctions;
+        return await tryFetch(endpoint);
       } catch (error) {
         console.warn('Primary endpoint failed, trying fallback:', error);
         try {
-          const auctions = await tryFetch(fallbackEndpoint);
-          return settled !== undefined ? auctions.filter(a => a.settled === settled) : auctions;
+          return await tryFetch(fallbackEndpoint);
         } catch (fallbackError) {
-          console.error('Both endpoints failed, using mock data:', fallbackError);
-          return generateMockAuctions(first, settled);
+          console.error('Both endpoints failed:', fallbackError);
+          throw new Error('Failed to fetch auctions from all endpoints');
         }
       }
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: 60000, // 1 minute
-    retry: 1,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
-}
-
-function generateMockAuctions(count: number, settled?: boolean): Auction[] {
-  const mockAuctions: Auction[] = [];
-  
-  for (let i = 1; i <= count; i++) {
-    const isSettled = settled !== undefined ? settled : Math.random() > 0.3;
-    const now = Math.floor(Date.now() / 1000);
-    
-    mockAuctions.push({
-      id: i.toString(),
-      amount: (Math.random() * 10 + 1).toFixed(2) + '000000000000000000', // ETH in wei
-      startTime: (now - 86400 + i * 3600).toString(),
-      endTime: (now + 3600 - i * 600).toString(),
-      bidder: `0x${Math.random().toString(16).substr(2, 40)}`,
-      settled: isSettled,
-      noun: {
-        id: (1000 + i).toString(),
-        owner: `0x${Math.random().toString(16).substr(2, 40)}`,
-        delegate: `0x${Math.random().toString(16).substr(2, 40)}`,
-        seed: {
-          background: Math.floor(Math.random() * 10),
-          body: Math.floor(Math.random() * 10),
-          accessory: Math.floor(Math.random() * 10),
-          head: Math.floor(Math.random() * 10),
-          glasses: Math.floor(Math.random() * 10),
-        },
-      },
-      bids: Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, j) => ({
-        id: `${i}-${j}`,
-        amount: (Math.random() * 5 + 0.1).toFixed(2) + '000000000000000000',
-        bidder: `0x${Math.random().toString(16).substr(2, 40)}`,
-        blockNumber: (18000000 + j * 100).toString(),
-        blockTimestamp: (now - 3600 + j * 300).toString(),
-        txnHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      })),
-    });
-  }
-  
-  return mockAuctions;
 }
